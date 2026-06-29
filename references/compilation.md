@@ -21,6 +21,17 @@ must not use archived sources to update active articles.
 
 ## The Compilation Loop
 
+### Step 0: Read Topic Config
+
+Before compiling, read the topic wiki's `config.md` (at `HUB/topics/<slug>/config.md`, or `.wiki/config.md` for local wikis). This file defines:
+- **`title`** and **`description`** — the topic's identity and scope
+- **`freshness_threshold`** — article quality threshold for lint (default 70)
+- **Conventions** — any topic-specific rules beyond skill defaults (tag taxonomy, custom categories, attribution rules, etc.)
+
+Use the `Scope` section to keep compilation on-topic. Respect the `Conventions` section for tag normalization, article categorization, and linking style. If `config.md` is missing, proceed normally and infer scope from existing content; suggest creating one on next lint.
+
+See [config.md](config.md) for the full specification.
+
 ### Step 1: Survey
 
 1. Read `raw/_index.md` to see all sources
@@ -60,7 +71,7 @@ Read `wiki/_index.md` and category indexes. For each key concept:
 3. When referencing another wiki article inline, use dual-link format: `[[slug|Name]] ([Name](../category/slug.md))` — this serves both Obsidian and the agent.
 4. Add "See Also" links to related wiki articles using dual-link format (check wiki index for related tags/concepts)
 5. Add "Sources" section linking back to raw files. If a raw path contains spaces, use angle-bracket markdown destinations such as `[Title](<../../raw/articles/File Name.md>)`.
-6. Generate frontmatter per `references/wiki-structure.md` — include `aliases` for alternate names
+6. Generate frontmatter per `references/wiki-structure.md` — include `aliases` for alternate names. Apply any tag or category conventions from the topic's `config.md` Conventions section (e.g., preferred tag taxonomy, custom categories).
    - In `sources:` frontmatter, write exact wiki-root-relative raw paths. Use block-list YAML and quote any path with spaces or punctuation. Do not cite raw files by display title or whitespace-delimited slug.
    - **`sources:` MUST be non-empty for articles compiled from raw files.** If the article has no fetchable raw sources because it was authored from conversation rather than ingested material, set `compiled-from: conversation` in frontmatter instead. Lint rule C18 enforces this — articles with neither will fail at next lint pass.
 7. Add `aliases` in frontmatter for any common alternate names (e.g., `aliases: [GPT, Generative Pre-trained Transformer]`)

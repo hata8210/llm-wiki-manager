@@ -246,10 +246,12 @@ Useful for: `grep "^## \[" log.md | tail -10` to see recent activity.
 
 ## config.md Format
 
+> **Topic-scoped file.** `config.md` lives at the root of a specific topic sub-wiki: `HUB/topics/<slug>/config.md` (e.g., `HUB/topics/ai-research/config.md`). It is **not** a hub-level file. For local wikis, it is `.wiki/config.md`. If found at the hub level during lint, it is a legacy artifact — see `config.md` in references for details.
+
 ```markdown
 ---
 title: "Wiki Title"
-description: "What this wiki is about"
+description: "What this topic wiki is about"
 created: YYYY-MM-DD
 freshness_threshold: 70
 ---
@@ -258,12 +260,14 @@ freshness_threshold: 70
 
 ## Scope
 
-[What topics this wiki covers]
+[What this topic wiki covers]
 
 ## Conventions
 
-[Any wiki-specific conventions beyond defaults]
+[Any topic-specific conventions beyond defaults]
 ```
+
+See [config.md](config.md) for the full specification, frontmatter fields, usage in boot/resume identity, lint behavior, and auto-generation rules.
 
 ## Source File Format (raw/)
 

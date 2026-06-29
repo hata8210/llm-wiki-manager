@@ -258,10 +258,11 @@ After collection ingestion, compile selectively:
 2. Markdown → preserve formatting
 3. Plain text → wrap in markdown
 4. PDF → extract to markdown using the PDF ingestion flow below
-5. JSON/CSV/structured data → describe schema + representative sample for
+5. Excel (.xls, .xlsx) → extract each sheet to a separate CSV file using the Excel ingestion flow below
+6. JSON/CSV/structured data → describe schema + representative sample for
    single-source ingest, or hand off to `ingest-collection --adapter
    csv-messages` when the user wants one source per row/message
-6. Images → create a metadata stub noting the image path and any visible content description
+7. Images → create a metadata stub noting the image path and any visible content description
 
 ### PDF Ingestion
 
@@ -291,13 +292,53 @@ content should become one raw markdown source.
    `page_count`, `extraction_tool`, `extraction_status`, and `fetched` for URL
    PDFs.
 
+### Excel Ingestion
+
+Excel files (.xls, .xlsx) are ingested by converting each sheet into a separate
+CSV file to ensure no data is missed.
+
+1.  **Extract Sheets**: Iterate through every worksheet in the workbook.
+2.  **Convert to CSV**: Save each sheet as a `.csv` file.
+3.  **Naming Convention**: Use the original filename and sheet name:
+    `<original-name>-<sheet-name>.csv`.
+4.  **Ingestion**: Follow the standard file ingestion flow for each generated CSV.
+    -   If the sheet is small, ingest as a single `raw/data/` source.
+    -   If the sheet contains many independent records (like messages or logs),
+        consider `ingest-collection --adapter csv-messages`.
+5.  **Tooling**: Use a helper script or a temporary Python environment with
+    `pandas` and `openpyxl`/`xlrd` to perform the conversion.
+6.  **Provenance**: The original Excel file should be moved to
+    `inbox/.processed/` after all sheets are extracted. Each generated CSV's
+    frontmatter should note the `original_source_file` and `sheet_name`.
+
 ## Freeform Text Ingestion
 
 1. User provides quoted text as the argument
 2. If `--title` not provided, derive a title from the first sentence or ask
 3. Auto-tag based on content keywords
 
-## Inbox Processing
+## CSV Ingestion Decision Logic
+
+When a CSV file is encountered (via direct ingest or inbox), the Agent must route it based on the **Intent** (derived from the topic's `config.md`) and the **File Size**.
+
+### 1. Identify Intent
+Read the `# Scope` section of the active topic's `config.md`:
+- **General Information Extraction**: The wiki's goal is to summarize facts, concepts, and narratives.
+- **Data Table Analysis**: The wiki's goal is to perform deep-dive analysis on structured records, tracking individual entities, or processing logs/transcripts.
+
+### 2. Routing Rules
+
+| Intent (from Scope) | File Size | Routing Path |
+|----------------------|-----------|--------------|
+| General Information | < 1MB | **Single-source Ingest**: Store as a single file in `raw/data/`. |
+| General Information | ≥ 1MB | **Collection Ingestion**: Use `--adapter csv-messages` to split into child sources. |
+| Data Table Analysis | Any size | **Collection Ingestion**: Use `--adapter csv-messages` to split into child sources. |
+
+### 3. Execution Details
+
+- **Single-source Ingest**: Create a Markdown wrapper in `raw/data/`. Include a schema description and a representative sample (first 5-10 rows) in the body.
+- **Collection Ingestion**: Split every row into an independent record in `raw/notes/`. This ensures the LLM can query and analyze individual rows without hitting context limits.
+- **Size Verification**: The 1MB threshold is a hard limit for single-source ingestion to prevent context window saturation during later compilation or querying.
 
 The `inbox/` directory is a drop zone. Users dump files there via Finder, `cp`, etc.
 

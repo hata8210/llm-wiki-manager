@@ -109,9 +109,10 @@ When this skill activates outside of an explicit wiki-related request:
 
 When giving any boot, resume, or "where you left off" briefing, start with the
 active wiki identity: `<wiki-name> booted from <wiki-root-path>`. Prefer the
-`config.md` title; for local `.wiki/` projects, fall back to the parent
-directory name; for `HUB/topics/<slug>/`, fall back to the slug. Include this
-line even when there is nothing in flight to resume.
+topic's `config.md` title (at `HUB/topics/<slug>/config.md`); for local `.wiki/`
+projects, fall back to the parent directory name; for `HUB/topics/<slug>/`,
+fall back to the slug. Include this line even when there is nothing in flight to
+resume.
 
 If the user asks whether they can trust a wiki artifact, requests an audit,
 mentions provenance or drift, or asks for content verification beyond a normal
@@ -121,7 +122,7 @@ query, use the Audit workflow instead of treating it as plain Q&A.
 
 ### Ingestion
 See [references/ingestion.md](references/ingestion.md).
-Flow: Source (URL/file/text/tweet/inbox) → fetch/read → extract metadata → write to `raw/{type}/` → update indexes → suggest compile if many uncompiled.
+Flow: Source (URL/file/text/tweet/inbox) → **Check `config.md` for Intent** → fetch/read → extract metadata → route (especially for CSV/Excel) → write to `raw/{type}/` → update indexes → suggest compile if many uncompiled.
 
 ### Collection Ingestion
 See [references/ingestion.md](references/ingestion.md) § Collection Ingestion.
@@ -267,7 +268,7 @@ Automatically run a quick structural check when any of these triggers occur:
 
 ### Quick Structure Check (lightweight, runs inline — not a full lint)
 
-1. **Hub integrity**: The hub (HUB) should ONLY contain `wikis.json`, `_index.md`, `log.md`, `topics/`, and optional `.sessions/`. If `raw/`, `wiki/`, `inventory/`, `datasets/`, `output/`, `inbox/`, or `config.md` exist at the hub level → **warn, do not delete**. These may hold user data from an older wiki layout. Suggest running the lint --fix workflow, which will move contents to the appropriate topic wiki, repair archive registry drift, or quarantine to `inbox/.unknown/` per C11/C12/C16/C17/C19 in `references/linting.md`.
+1. **Hub integrity**: The hub (HUB) should ONLY contain `wikis.json`, `_index.md`, `log.md`, `topics/`, and optional `.sessions/`. If `raw/`, `wiki/`, `inventory/`, `datasets/`, `output/`, `inbox/`, or `config.md` exist at the hub level → **warn, do not delete**. These may hold user data from an older wiki layout. `config.md` is a topic-level file (`HUB/topics/<slug>/config.md`), not a hub-level file. Suggest running the lint --fix workflow, which will move contents to the appropriate topic wiki, repair archive registry drift, or quarantine to `inbox/.unknown/` per C11/C12/C16/C17/C19 in `references/linting.md`.
 
 2. **Index freshness**: For the active topic wiki, compare actual file counts in `raw/`, `wiki/`, `inventory/`, and `datasets/` subdirectories against the rows in their `_index.md`. Ignore maintenance/report areas such as `.librarian/` and `.audit/`. If mismatched → auto-fix by regenerating the affected directory index from frontmatter and removing dead entries.
 
